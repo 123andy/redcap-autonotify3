@@ -1013,6 +1013,7 @@ function injectPluginTabs($pid, $plugin_path, $plugin_name) {
 
 function logIt($msg, $level = "INFO") {
     global $log_file, $project_id;
+    global $log_level;
     if (! file_exists($log_file)) {
         file_put_contents($log_file, "Initializing " . AutoNotify::PluginName . " log file");
     }
@@ -1020,9 +1021,38 @@ function logIt($msg, $level = "INFO") {
     if (! file_exists($log_file)) {
         $log_file = ini_get('error_log');
     }
-    file_put_contents( $log_file,
-        date( 'Y-m-d H:i:s' ) . "\t" . $project_id . "\t" . $level . "\t" . $msg . "\n",
-        FILE_APPEND );
+
+    switch ($level) {
+        case "ALL":
+            $level_value = 6;
+            break;
+        case "DEBUG":
+            $level_value = 5;
+            break;
+        case "INFO":
+            $level_value = 4;
+            break;
+        case "WARN":
+            $level_value = 3;
+            break;
+        case "ERROR":
+            $level_value = 2;
+            break;
+        case "FATAL":
+            $level_value = 1;
+            break;
+        case "OFF":
+            $level_value = 0;
+            break;
+        default:
+            $level_value = -1;
+    }
+
+    if ($level_value <= $log_level) {
+        file_put_contents( $log_file,
+            date( 'Y-m-d H:i:s' ) . "\t" . $project_id . "\t" . $level . "\t" . $msg . "\n",
+            FILE_APPEND );
+    }
 }
 
 // Function for decrypting (from version 643)

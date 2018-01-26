@@ -28,6 +28,8 @@ $http_only = array('stanford.edu', 'redcap-warrior.ctsi.ufl.edu');
 // oneself could be to reference localhost
 $use_localhost_for_det_host = false;
 
+// set a log level between 0 and 6 where 0 is OFF and 6 is ALL messages.  See logIt function for details.
+$log_level = 4;  // 4 is INFO
 
 ////////////// DONT EDIT BELOW HERE //////////////
 
