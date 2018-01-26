@@ -97,7 +97,7 @@ class AutoNotify {
 
     // Scans the log for the latest autonotify configuration
     public function loadConfig() {
-//		logIt(__FUNCTION__, "DEBUG");
+		logIt(__FUNCTION__, "DEBUG");
 
         // Convert old querystring-based autonotify configurations to the log-based storage method
         $this->checkForUpgrade();
@@ -110,7 +110,7 @@ class AutoNotify {
 			AND l.description = '" . self::PluginName . " Config'
 			ORDER BY ts DESC LIMIT 1";
         $q = db_query($sql);
-		// logIt(__FUNCTION__ . ": sql: $sql","DEBUG");
+		 logIt(__FUNCTION__ . ": sql: $sql","DEBUG");
         if (db_num_rows($q) == 1) {
             // Found config!
             $row = db_fetch_assoc($q);
@@ -141,7 +141,7 @@ class AutoNotify {
 
     // Execute the loaded DET.  Returns false if any errors
     public function execute($cron_only = false) {
-        // logIt(__FUNCTION__, "DEBUG");
+        logIt(__FUNCTION__, "DEBUG");
         $triggers_fired = array();
 
         // Check for Pre-DET url
@@ -160,7 +160,7 @@ class AutoNotify {
             $scope = isset($trigger['scope']) ? $trigger['scope'] : 0;  // Get the scope or set to 0 (default)
 
             if (!$enabled) {
-//				logIt(__FUNCTION__ . ": The current trigger ($title) is not set as enabled - skipping", "DEBUG");
+				logIt(__FUNCTION__ . ": The current trigger ($title) is not set as enabled - skipping", "DEBUG");
                 continue;
             }
 
@@ -176,7 +176,7 @@ class AutoNotify {
             if ($this->longitudinal && $this->redcap_event_name && $cron_only == false) $logic = LogicTester::logicPrependEventName($logic, $this->redcap_event_name);
 
             if (!empty($logic) && !empty($this->record)) {
-//                logIt($this->record . ": Proj {$this->project_id} : Logic: " . json_encode($logic), "DEBUG");
+                logIt($this->record . ": Proj {$this->project_id} : Logic: " . json_encode($logic), "DEBUG");
                 if (LogicTester::evaluateLogicSingleRecord($logic, $this->record, null, $this->project_id)) {
                     // Condition is true, check to see if already notified
                     if (!self::checkForPriorNotification($title, $scope)) {
@@ -189,7 +189,7 @@ class AutoNotify {
                     }
                 } else {
                     // Logic did not pass
-                    //logIt("Logic: $logic / Record: " . $this->record . " / Project: " . $this->project_id, "DEBUG");
+                    logIt("Logic: $logic / Record: " . $this->record . " / Project: " . $this->project_id, "DEBUG");
                     $this_result = "Logic false";
                 }
             } else {
@@ -208,7 +208,7 @@ class AutoNotify {
 
     // Used to test the logic and return an appropriate image
     public function testLogic($logic) {
-//		logIt('Testing record '. $this->record . ' with ' . $logic, "DEBUG");
+		logIt('Testing record '. $this->record . ' with ' . $logic, "DEBUG");
 
         $piped_logic = EnhancedPiping::pipeTags($logic, $this->record, $this->event_id, $this->project_id);
         if ($piped_logic != $logic) logIt(__FUNCTION__ . ": logic updated from \n$logic\nto\n$piped_logic", "INFO");

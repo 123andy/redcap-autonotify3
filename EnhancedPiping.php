@@ -195,7 +195,7 @@ class EnhancedPiping {
                 }
             }
         }
-        // logIt("matches" .print_r($matches, true), "DEBUG");
+         logIt("matches" .print_r($matches, true), "DEBUG");
         
         //sometimes there is nothing to pipe
         if ($matches['pre-pipe']!=null) {
