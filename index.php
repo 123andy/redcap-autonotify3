@@ -37,7 +37,12 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['redcap_url']) ) {
 
 
 // Include required files
-require_once "../../redcap_connect.php";
+if (!file_exists('../../redcap_connect.php')) {
+    $REDCAP_ROOT = "/var/www/redcap";
+    require_once $REDCAP_ROOT . '/redcap_connect.php';
+} else {
+    require_once '../../redcap_connect.php';
+}
 require_once "common.php";
 
 if (DEBUG) {
