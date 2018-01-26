@@ -22,7 +22,11 @@ error_reporting(E_ALL);
 define("DEBUG",FALSE);
 
 // MANUAL OVERRIDE OF HTTPS - Add your url domain to this array if you want to only use http
-$http_only = array('stanford.edu');
+$http_only = array('stanford.edu', 'redcap-warrior.ctsi.ufl.edu');
+
+// If a host is hidden behind a load balancer, the most expedient path to calling
+// oneself could be to reference localhost
+$use_localhost_for_det_host = false;
 
 
 ////////////// DONT EDIT BELOW HERE //////////////
@@ -55,6 +59,8 @@ if (DEBUG) {
 if (!isset($log_file)) {
     $log_file = APP_PATH_TEMP . "autonotify_plugin.log";
 }
+
+logIt("POST: " . print_r($_POST, true), "DEBUG");
 
 
 // Create an AutoNotify Object

@@ -64,7 +64,7 @@ class AutoNotify {
         }
         $this->redcap_data_access_group = voefr('redcap_data_access_group');
         $this->instrument_complete = voefr($this->instrument.'_complete');
-        
+
     }
 
     // Converts old autonotify configs that used the url into new ones that use the log table
@@ -171,7 +171,7 @@ class AutoNotify {
                 logIt("Cannot process alert $i because it has an empty title: " . json_encode($trigger),"ERROR");
                 continue;
             }
-            
+
             // Append current event prefix to lonely fields if longitidunal
             if ($this->longitudinal && $this->redcap_event_name && $cron_only == false) $logic = LogicTester::logicPrependEventName($logic, $this->redcap_event_name);
 
@@ -284,7 +284,13 @@ class AutoNotify {
         }
 
         // Build URL
-        $url = 'http' . ($isHttps ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        global $use_localhost_for_det_host;
+        if ($use_localhost_for_det_host) {
+            $host = "localhost";
+        } else {
+            $host = $_SERVER['HTTP_HOST'];
+        }
+        $url = 'http' . ($isHttps ? 's' : '') . '://' . $host . $_SERVER['REQUEST_URI'];
 
         // Remove query string from DET url
         $url = preg_replace('/\?.*/', '', $url);
@@ -310,7 +316,7 @@ class AutoNotify {
             return false;
         }
     }
-    
+
 
     // Notify and log
     public function notify($title, $trigger, $test_mode = false) {
@@ -320,7 +326,7 @@ class AutoNotify {
         $url = APP_PATH_WEBROOT_FULL . "redcap_v{$redcap_version}/" . "DataEntry/record_home.php?pid={$this->project_id}&id={$this->record}";
 
         $piped_msg = EnhancedPiping::pipeThis($trigger['body'],  $this->record, $this->event_id, $this->project_id);
-        
+
         // Prepare message
         $email = new Message();
         $email->setTo(self::pipeThis($trigger['to']));
@@ -328,7 +334,7 @@ class AutoNotify {
         $email->setBcc(self::pipeThis($trigger['bcc']));
         $email->setFrom(self::pipeThis($trigger['from']));
         $email->setSubject(self::pipeThis($trigger['subject']));
-        
+
         //Plugin::log($email, "DEBUG", "CHECKING contents of email fields");
         //check which body type was selected and setBody accordingly
         //         'standard' => 'Standard (red box with link to record)',
@@ -342,7 +348,7 @@ class AutoNotify {
             //another wrapper around pipe will transliterate the survey link set in this format: [survey:instrument_name]
             $msg = nl2br($piped_msg);
         }
-        
+
         //Standard Message has a whole bunch of extra line breaks. Try removing the nl2br only for Standard
         //$email->setBody(nl2br($msg));
         $email->setBody(($msg));
@@ -361,7 +367,7 @@ class AutoNotify {
         }
 
         // Send Email
-        //First, check that there is  
+        //First, check that there is
         //1) at least one valid email in TO, CC, or BCC?
         //2) a valid email in the 'FROM'
         $foo = array($email->getTo(),$email->getCc(),$email->getBcc(),$email->getFrom());
@@ -376,9 +382,9 @@ class AutoNotify {
                     $this->project_id
                     );
             return false;
-            
+
         }
-        
+
         if (!$email->send()) {
             logIt("Error sending email:".print_r($email->getSendError(), true));
             error_log('Error sending mail: '.$email->getSendError().' with '.json_encode($email));
@@ -413,7 +419,7 @@ class AutoNotify {
     public function verifyEmail($emails) {
         $from = Utility::isValidEmail($emails[3]);
         $to = Utility::isValidEmail($emails[0]) + Utility::isValidEmail($emails[1]) + Utility::isValidEmail($emails[2]);
-        
+
         if ($from < 1) {
             logIt('Error sending mail: From address is not valid:'.$from);
             return false;
@@ -423,11 +429,11 @@ class AutoNotify {
                     " To:".$emails[0] ." CC:".$emails[1]." Bcc:".$emails[2]);
             return false;
         }
-        
+
         return true;
     }
-    
-    
+
+
     // A wrapper for piping values...
     public function pipeThis($input) {
       //                                                  rec,           even,          ins,  recdat line   project_id         span
@@ -440,9 +446,9 @@ class AutoNotify {
     public function checkForPriorNotification($title, $scope=0) {
         if (!$this->longitudinal) $scope = 1; // Record match only is sufficient
         $sql = "SELECT l.data_values, l.ts
-			FROM redcap_log_event l WHERE 
+			FROM redcap_log_event l WHERE
 		 		l.project_id = {$this->project_id}
-			AND l.page = 'PLUGIN' 
+			AND l.page = 'PLUGIN'
 			AND l.description = '" . self::PluginName . " Alert';";
         $q = db_query($sql);
 
@@ -513,7 +519,7 @@ class AutoNotify {
         $file_field = isset($trigger['file_field']) ? $trigger['file_field'] : null;
         $file_event = isset($trigger['file_event']) ? $trigger['file_event'] : null;
 
-        
+
         $html = RCView::div(array('class'=>'round chklist trigger','idx'=>"$id"),
             RCView::div(array('class'=>'chklisthdr', 'style'=>'color:rgb(128,0,0); margin-bottom:5px; padding-bottom:5px; border-bottom:1px solid #AAA;'), "Trigger $id: $title".
                 RCView::a(array('href'=>'javascript:','onclick'=>"removeTrigger('$id')"), RCView::img(array('style'=>'float:right;padding-top:0px;', 'src'=>'cross.png')))
@@ -549,7 +555,7 @@ class AutoNotify {
         $dark = "#800000";	//#1a74ba  1a74ba
         $light = "#FFE1E1";		//#ebf6f3
         $border = "#800000";	//FF0000";	//#a6d1ed	#3182b9
-        
+
         // Message (email html painfully copied from box.net notification email)
         $msg = RCView::table(array('cellpadding'=>'0', 'cellspacing'=>'0','border'=>'0','style'=>'border:1px solid #bbb; font:normal 12px Arial;color:#666'),
                 RCView::tr(array(),
@@ -686,7 +692,7 @@ class AutoNotify {
                         )
                 );
         $msg = "<html><head></head><body>".$msg."</body></html>";
-        
+
         return $msg;
     }
 
@@ -732,24 +738,24 @@ EOT;
         );
         return $row;
     }
-    
+
     // Adds a single row with an input
     public function renderSelectRow($id, $label, $value, $help_id = null, $format='input') {
         $help_id = ( $help_id ? $help_id : $id);
         $input_element = '';
         $instrument_names = REDCap::getInstrumentNames();
-        
+
         foreach ($instrument_names as $unique_name=>$label) {
             $instrument_options[$unique_name] = $unique_name;
         }
-        
+
         if ($format == 'select') {
             $input_element = RCView::select(array('id'=>"$id", 'name'=>"$id", 'class'=>"tbi x-form-text x-form-field", 'style'=>'height:20px;border:0px;', 'onchange'=>"$id"), $instrument_options);
-            
+
         } else {
             $input_element = "Invalid input format!!!";
         }
-    
+
         $row = RCView::tr(array(),
                 RCView::td(array('class'=>'td1'), self::insertHelp($help_id)).
                 RCView::td(array('class'=>'td2'), "<label for='$id'><b>$label:</b></label>").
@@ -907,7 +913,7 @@ EOT;
                         RCView::li(array(),'&raquo; user@example.com').
                         RCView::li(array(),'&raquo; user@example.com, anotheruser@example.com')
                     )
-                )  
+                )
             ).RCView::div(array('id'=>'from_info','style'=>'display:none;'),
                 RCView::p(array(),'Please note that some spam filters my classify this email as spam - you should test prior to going into production.'.
                     RCView::ul(array('style'=>'margin-left:15px;'),
@@ -924,7 +930,7 @@ EOT;
             ).RCView::div(array('id'=>'body_info','style'=>'display:none;'),
                 RCView::p(array(),'This message will be included in the alert.  A number of custom-piping options are available:
                     <dt>Surveys:</dt>
-                        <dl><b>[survey-link:form_name]</b> OR 
+                        <dl><b>[survey-link:form_name]</b> OR
                             <br/><b>[event_1_arm_1][survey-link:form_name]</b> if longitudinal OR
                             <br/><b>[survey-queue-link]</b>
                         </dl>
@@ -971,7 +977,7 @@ function renderTemporaryMessage($msg, $title='') {
 		t".$id." = setTimeout(function(){
 			$('#".$id."').hide('blind',1500);
 		},10000);
-		$('#".$id."').bind( 'click', function() { 
+		$('#".$id."').bind( 'click', function() {
 			$(this).hide('blind',1000);
 			window.clearTimeout(t".$id.");
 		});
