@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to the Autonotify3 project will be documented in this file.
 
+
+## [1.1.1] - 2018-01-30
+### Changed
+- Correct queries for config and prior notifications in redcap_log_event (Philip Chase)
+
+
 ## [1.1.0] - 2018-01-26
 ### Added
 - Add a basic README and developer notes (Philip Chase)
