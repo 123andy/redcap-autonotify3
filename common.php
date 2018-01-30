@@ -104,11 +104,10 @@ class AutoNotify {
 
         // Load from the log
         $sql = "SELECT l.sql_log, l.ts
-			FROM redcap_log_event l WHERE
-		 		l.project_id = " . intval($this->project_id) . "
-			-- AND l.page = 'PLUGIN'
-			AND l.description = '" . self::PluginName . " Config'
-			ORDER BY ts DESC LIMIT 1";
+            FROM redcap_log_event l WHERE
+                l.project_id = " . intval($this->project_id) . "
+            AND l.description = '" . self::PluginName . " Config'
+            ORDER BY ts DESC LIMIT 1";
         $q = db_query($sql);
 		 logIt(__FUNCTION__ . ": sql: $sql","DEBUG");
         if (db_num_rows($q) == 1) {
@@ -446,10 +445,9 @@ class AutoNotify {
     public function checkForPriorNotification($title, $scope=0) {
         if (!$this->longitudinal) $scope = 1; // Record match only is sufficient
         $sql = "SELECT l.data_values, l.ts
-			FROM redcap_log_event l WHERE
-		 		l.project_id = {$this->project_id}
-			AND l.page = 'PLUGIN'
-			AND l.description = '" . self::PluginName . " Alert';";
+            FROM redcap_log_event l WHERE
+                l.project_id = {$this->project_id}
+            AND l.description = '" . self::PluginName . " Alert';";
         $q = db_query($sql);
 
         while ($row = db_fetch_assoc($q)) {
