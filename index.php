@@ -13,7 +13,7 @@
  * The settings for each project are stored as an encoded variable (an) in the query string of the DET.
  *
  * Andrew Martin, Stanford University, 2016
- * 
+ *
  * 19Oct2016: update of autonotify to add survey field. This plugin will append a link to the specified survey at the end of the autonotify email.
  * 21Oct2016: support sending links:  add wrapper around pipe that will transliterate the survey link set in this format: [survey:instrument_name]
  *
@@ -22,8 +22,14 @@ error_reporting(E_ALL);
 define("DEBUG",FALSE);
 
 // MANUAL OVERRIDE OF HTTPS - Add your url domain to this array if you want to only use http
-$http_only = array('stanford.edu');
+$http_only = array('stanford.edu', 'redcap-warrior.ctsi.ufl.edu');
 
+// If a host is hidden behind a load balancer, the most expedient path to calling
+// oneself could be to reference localhost
+$use_localhost_for_det_host = false;
+
+// set a log level between 0 and 6 where 0 is OFF and 6 is ALL messages.  See logIt function for details.
+$log_level = 4;  // 4 is INFO
 
 ////////////// DONT EDIT BELOW HERE //////////////
 
@@ -35,8 +41,14 @@ if ( $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['redcap_url']) ) {
     $_GET['pid'] = $_POST['project_id'];	// Set the pid from POST so context is Project rather than Global
 }
 
+
 // Include required files
-require_once "../../redcap_connect.php";
+if (!file_exists('../../redcap_connect.php')) {
+    $REDCAP_ROOT = "/var/www/redcap";
+    require_once $REDCAP_ROOT . '/redcap_connect.php';
+} else {
+    require_once '../../redcap_connect.php';
+}
 require_once "common.php";
 
 if (DEBUG) {
@@ -50,6 +62,8 @@ if (!isset($log_file)) {
     $log_file = APP_PATH_TEMP . "autonotify_plugin.log";
 }
 
+logIt("POST: " . print_r($_POST, true), "DEBUG");
+
 
 // Create an AutoNotify Object
 $an = new AutoNotify($project_id);
@@ -58,11 +72,20 @@ $an = new AutoNotify($project_id);
 logIt("Starting AutoNotify on project $project_id");
 logIt("DET URL: " . $an->getDetUrl(), "DEBUG");
 
+logIt('action = ' . $action, "DEBUG");
+
+logIt('server request method = ' . $_SERVER['REQUEST_METHOD'], "DEBUG");
+logIt('post redcap_url = ' . $_POST['redcap_url'], "DEBUG");
+
 ##### RUNNING AS DET - PART 2 #####
 if ($action == 'det') {
+
     // Execute AutoNotify script if called from DET trigger
+    logIt("action = det", "DEBUG");
     $an->loadDetPost();
+    logIt("calling DET loadConfig", "DEBUG");
     $an->loadConfig();
+    logIt("calling DET execute", "DEBUG");
     $an->execute();
     exit;
 }
@@ -88,7 +111,7 @@ if ($my_rights['expiration'] != "" && $my_rights['expiration'] < TODAY) {
 # record = record to test with
 # ** TO BE IMPROVED **
 if (isset($_POST['test']) && $_POST['test']) {
-//    logIt('REQUEST:',print_r($_REQUEST,true),'DEBUG');
+    logIt('REQUEST:',print_r($_REQUEST,true),'DEBUG');
     $logic = htmlspecialchars_decode($_POST['logic'], ENT_QUOTES);
     $record = $_POST['record'];
 
@@ -122,7 +145,7 @@ if (isset($_POST['test_message']) && $_POST['test_message']) {
 
 
 
-//YJL testing 
+//YJL testing
 function testing($an) {
     echo "</br>xWE ARE IN TESTING LAND</br>";
     $event_id = REDCap::getEventIdFromUniqueEvent( $an->redcap_event_name);
@@ -131,30 +154,30 @@ function testing($an) {
     $test_msg = "some text [event_1_arm_1][survey:human_subject_approval] and then more text.  this should also work [event_2_arm_1][survey:human_subject_approval]. This is a file [file:fupload]";
     $file_msg = "[event_1_arm_1][file:fupload]";
     //$rtn= EnhancedPiping::pipeThis($test_msg, $an->record, $event_id, $an->project_id);
-    
+
 //     //if there are files, then attach themto email
 //     $files = EnhancedPiping::getFiles($trigger['files'],  $this->record, $this->event_id);
 //     foreach ($files as $key => $value) {
 //         $email->setAttachment($attach_file);
 //     }
-    
+
     //if there are files, then attach themto email
     $files = EnhancedPiping::getFiles($file_msg, 1, 60212, 'jael', $an->project_id);
     print("FILES ARE: ".print_r($files, true));
     $email = new Message();
-    
+
     $email->setTo("jael@stanford.edu");
     $email->setFrom("jael@stanford.edu");
     $email->setSubject("foobar");
     $email->setBody("foobar x x x");
-    
+
     foreach ($files as $key => $value) {
         print "</br>attaching $value";
         $email->setAttachment("/tmp/".$value);
         // DELETE TEMP FILE
         unlink("/tmp/".$value);
     }
-    
+
     logIt("EMAILING THIS:  ".$rtn);
     if (!$email->send()) {
         print('Error sending mail: '.$email->getSendError().' with '.json_encode($email));
@@ -215,7 +238,7 @@ if (defined('SUPER_USER') && SUPER_USER) {
 
 # Check to see if we are saving a previously posted trigger
 if (isset($_POST['save']) && $_POST['save']) {
-//	logIt(__FUNCTION__ . ": POST: ".print_r($_POST,true), "DEBUG");
+	logIt(__FUNCTION__ . ": POST: ".print_r($_POST,true), "DEBUG");
 
     // Build Parameters
     $params = $_POST;
