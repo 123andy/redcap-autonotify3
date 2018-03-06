@@ -19,13 +19,11 @@ logIt("STARTING");
 
 // Step 1:  Find all AutoNotify Projects that have a datediff in the filter logic
 $sql = "
-    SELECT 
+    SELECT
         distinct l.project_id
-       -- , l.sql_log, l.ts
-    FROM 
-        redcap_log_event l 
+    FROM
+        redcap_log_event l
     WHERE
-        l.page = 'PLUGIN'
         AND l.description = 'AutoNotify3 Config'
         AND l.sql_log like '%datediff%'
 ";
