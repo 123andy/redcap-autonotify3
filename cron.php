@@ -24,7 +24,7 @@ $sql = "
     FROM
         redcap_log_event l
     WHERE
-        AND l.description = 'AutoNotify3 Config'
+        l.description = 'AutoNotify3 Config'
         AND l.sql_log like '%datediff%'
 ";
 $q = db_query($sql);
