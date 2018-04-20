@@ -70,12 +70,14 @@ if ($action == 'det') {
 
 ##### VALIDATION #####
 # Make sure user has permissions for project or is a super user
-$these_rights = REDCap::getUserRights(USERID);
-$my_rights = $these_rights[USERID];
+$user = strtolower(USERID);
+$these_rights = REDCap::getUserRights($user);
+$my_rights = $these_rights[$user];
 if (!$my_rights['design'] && !SUPER_USER) {
     showError('Project Setup rights are required to add/modify automatic notifications');
     exit;
 }
+
 # Make sure the user's rights have not expired for the project
 if ($my_rights['expiration'] != "" && $my_rights['expiration'] < TODAY) {
     showError('Your user account has expired for this project.  Please contact the project admin.');
