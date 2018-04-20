@@ -447,7 +447,7 @@ class AutoNotify {
         while ($row = db_fetch_assoc($q)) {
             $pairs = parseEnum($row['data_values']);
             if (
-                $pairs['title'] == $title &&
+                $pairs['title'] == trim($title) &&
                 $pairs['record'] == $this->record &&
                 ( $scope == 1 OR $pairs['event'] == $this->redcap_event_name)
             )
